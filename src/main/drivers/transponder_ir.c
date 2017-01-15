@@ -63,72 +63,6 @@ static uint16_t dmaBufferOffset;
 
 void updateTransponderDMABuffer_erlt(const uint8_t* transponderData)
 {
-    uint8_t erltIrCode = 63; //test transponder ID
-    uint8_t bitIndex;
-
-
-    //Code = 63 -> ir-data = 111111 -> ir-code = 001111110
-
-    dmaBufferOffset = 0;
-
-    uint8_t i;
-    for(i = 0; i < 5; i++) //5 x 50us -> 0
-    {
-        transponderIrDMABuffer[dmaBufferOffset] = 50; //IR-Led on
-        dmaBufferOffset++;
-    }
-
-    for(i = 0; i < 5; i++) //5 x 50us -> 0
-    {
-        transponderIrDMABuffer[dmaBufferOffset] = 0; //IR-Led off
-        dmaBufferOffset++;
-    }
-
-    for(i = 0; i < 13; i++) //13 x 50us -> 1
-    {
-        transponderIrDMABuffer[dmaBufferOffset] = 50; //IR-Led on
-        dmaBufferOffset++;
-    }
-
-    for(i = 0; i < 13; i++) //13 x 50us -> 1
-    {
-        transponderIrDMABuffer[dmaBufferOffset] = 0; //IR-Led off
-        dmaBufferOffset++;
-    }
-
-    for(i = 0; i < 13; i++) //13 x 50us -> 1
-    {
-        transponderIrDMABuffer[dmaBufferOffset] = 50; //IR-Led on
-        dmaBufferOffset++;
-    }
-
-    for(i = 0; i < 13; i++) //13 x 50us -> 1
-    {
-        transponderIrDMABuffer[dmaBufferOffset] = 0; //IR-Led off
-        dmaBufferOffset++;
-    }
-
-    for(i = 0; i < 13; i++) //13 x 50us -> 1
-    {
-        transponderIrDMABuffer[dmaBufferOffset] = 50; //IR-Led on
-        dmaBufferOffset++;
-    }
-
-    for(i = 0; i < 13; i++) //13 x 50us -> 1
-    {
-        transponderIrDMABuffer[dmaBufferOffset] = 0; //IR-Led off
-        dmaBufferOffset++;
-    }
-
-    for(i = 0; i < 5; i++) //5 x 50us -> 0
-    {
-        transponderIrDMABuffer[dmaBufferOffset] = 50; //IR-Led on
-        dmaBufferOffset++;
-    }
-}
-
-void updateTransponderDMABuffer_erlt(const uint8_t* transponderData)
-{
     uint8_t erltIrCode = ((~transponderData[5]) & 63);
 
     dmaBufferOffset = 0;
@@ -195,6 +129,46 @@ void updateTransponderDMABuffer_erlt(const uint8_t* transponderData)
         transponderIrDMABuffer[dmaBufferOffset] = 0;
         dmaBufferOffset++;
     }
+}
+
+
+void updateTransponderDMABuffer(const uint8_t* transponderData)
+{
+    updateTransponderDMABuffer_erlt(transponderData);
+    return;
+    /*
+    uint8_t byteIndex;
+    uint8_t bitIndex;
+    uint8_t toggleIndex;
+
+    for (byteIndex = 0; byteIndex < TRANSPONDER_DATA_LENGTH; byteIndex++) {
+
+        uint8_t byteToSend = *transponderData;
+        transponderData++;
+        for (bitIndex = 0; bitIndex < TRANSPONDER_BITS_PER_BYTE; bitIndex++)
+        {
+            bool doToggles = false;
+            if (bitIndex == 0) {
+                doToggles = true;
+            } else if (bitIndex == TRANSPONDER_BITS_PER_BYTE - 1) {
+                doToggles = false;
+            } else {
+                doToggles = byteToSend & (1 << (bitIndex - 1));
+            }
+
+            for (toggleIndex = 0; toggleIndex < TRANSPONDER_TOGGLES_PER_BIT; toggleIndex++)
+            {
+                if (doToggles) {
+                    transponderIrDMABuffer[dmaBufferOffset] = BIT_TOGGLE_1;
+                } else {
+                    transponderIrDMABuffer[dmaBufferOffset] = BIT_TOGGLE_0;
+                }
+                dmaBufferOffset++;
+            }
+            transponderIrDMABuffer[dmaBufferOffset] = BIT_TOGGLE_0;
+            dmaBufferOffset++;
+        }
+    }*/
 }
 
 void transponderIrWaitForTransmitComplete(void)
