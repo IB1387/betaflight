@@ -70,8 +70,8 @@ void transponderIrHardwareInit(ioTag_t ioTag)
 
     /* Time base configuration */
     TIM_TimeBaseStructInit(&TIM_TimeBaseStructure);
-    TIM_TimeBaseStructure.TIM_Period = 156;
-    TIM_TimeBaseStructure.TIM_Prescaler = 0;
+    TIM_TimeBaseStructure.TIM_Period = 50;
+    TIM_TimeBaseStructure.TIM_Prescaler = 72;
     TIM_TimeBaseStructure.TIM_ClockDivision = 0;
     TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up;
     TIM_TimeBaseInit(timer, &TIM_TimeBaseStructure);

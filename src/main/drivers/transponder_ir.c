@@ -61,39 +61,139 @@ bool isTransponderIrReady(void)
 
 static uint16_t dmaBufferOffset;
 
-void updateTransponderDMABuffer(const uint8_t* transponderData)
+void updateTransponderDMABuffer_erlt(const uint8_t* transponderData)
 {
-    uint8_t byteIndex;
+    uint8_t erltIrCode = 63; //test transponder ID
     uint8_t bitIndex;
-    uint8_t toggleIndex;
 
-    for (byteIndex = 0; byteIndex < TRANSPONDER_DATA_LENGTH; byteIndex++) {
 
-        uint8_t byteToSend = *transponderData;
-        transponderData++;
-        for (bitIndex = 0; bitIndex < TRANSPONDER_BITS_PER_BYTE; bitIndex++)
+    //Code = 63 -> ir-data = 111111 -> ir-code = 001111110
+
+    dmaBufferOffset = 0;
+
+    uint8_t i;
+    for(i = 0; i < 5; i++) //5 x 50us -> 0
+    {
+        transponderIrDMABuffer[dmaBufferOffset] = 50; //IR-Led on
+        dmaBufferOffset++;
+    }
+
+    for(i = 0; i < 5; i++) //5 x 50us -> 0
+    {
+        transponderIrDMABuffer[dmaBufferOffset] = 0; //IR-Led off
+        dmaBufferOffset++;
+    }
+
+    for(i = 0; i < 13; i++) //13 x 50us -> 1
+    {
+        transponderIrDMABuffer[dmaBufferOffset] = 50; //IR-Led on
+        dmaBufferOffset++;
+    }
+
+    for(i = 0; i < 13; i++) //13 x 50us -> 1
+    {
+        transponderIrDMABuffer[dmaBufferOffset] = 0; //IR-Led off
+        dmaBufferOffset++;
+    }
+
+    for(i = 0; i < 13; i++) //13 x 50us -> 1
+    {
+        transponderIrDMABuffer[dmaBufferOffset] = 50; //IR-Led on
+        dmaBufferOffset++;
+    }
+
+    for(i = 0; i < 13; i++) //13 x 50us -> 1
+    {
+        transponderIrDMABuffer[dmaBufferOffset] = 0; //IR-Led off
+        dmaBufferOffset++;
+    }
+
+    for(i = 0; i < 13; i++) //13 x 50us -> 1
+    {
+        transponderIrDMABuffer[dmaBufferOffset] = 50; //IR-Led on
+        dmaBufferOffset++;
+    }
+
+    for(i = 0; i < 13; i++) //13 x 50us -> 1
+    {
+        transponderIrDMABuffer[dmaBufferOffset] = 0; //IR-Led off
+        dmaBufferOffset++;
+    }
+
+    for(i = 0; i < 5; i++) //5 x 50us -> 0
+    {
+        transponderIrDMABuffer[dmaBufferOffset] = 50; //IR-Led on
+        dmaBufferOffset++;
+    }
+}
+
+void updateTransponderDMABuffer_erlt(const uint8_t* transponderData)
+{
+    uint8_t erltIrCode = ((~transponderData[5]) & 63);
+
+    dmaBufferOffset = 0;
+    uint16_t i = 0;
+
+    //Header
+    for(i = 0; i < NUM_PERIODS_0; i++) //5 x 50us -> 0
+    {
+        transponderIrDMABuffer[dmaBufferOffset] = 50; //IR-Led on
+        dmaBufferOffset++;
+    }
+    for(i = 0; i < NUM_PERIODS_0; i++) //5 x 50us -> 0
+    {
+        transponderIrDMABuffer[dmaBufferOffset] = 0; //IR-Led on
+        dmaBufferOffset++;
+    }
+
+    //Data bits
+    uint8_t bitmask = 32;
+    uint8_t numPeriods;
+    uint8_t value;
+    bool parity = true;
+
+    for(i = 0; i < 6; i++) //For every data bit
+    {
+        if((erltIrCode & bitmask) == 0) //if erltIrCode bit i is 0
+            numPeriods = NUM_PERIODS_0;
+        else
         {
-            bool doToggles = false;
-            if (bitIndex == 0) {
-                doToggles = true;
-            } else if (bitIndex == TRANSPONDER_BITS_PER_BYTE - 1) {
-                doToggles = false;
-            } else {
-                doToggles = byteToSend & (1 << (bitIndex - 1));
-            }
+            numPeriods = NUM_PERIODS_1;
+            parity = !parity;
+        }
+        bitmask = bitmask >> 1;
 
-            for (toggleIndex = 0; toggleIndex < TRANSPONDER_TOGGLES_PER_BIT; toggleIndex++)
-            {
-                if (doToggles) {
-                    transponderIrDMABuffer[dmaBufferOffset] = BIT_TOGGLE_1;
-                } else {
-                    transponderIrDMABuffer[dmaBufferOffset] = BIT_TOGGLE_0;
-                }
-                dmaBufferOffset++;
-            }
-            transponderIrDMABuffer[dmaBufferOffset] = BIT_TOGGLE_0;
+        if((i & 1) == 0)
+            value = 50;
+        else
+            value = 0;
+
+        uint8_t j;
+        for(j = 0; j < numPeriods; j++) //5 x 50us -> 0
+        {
+            transponderIrDMABuffer[dmaBufferOffset] = value; //IR-Led on
             dmaBufferOffset++;
         }
+    }
+
+
+    //Parity bit
+    if(parity)
+        numPeriods = NUM_PERIODS_0;
+    else
+        numPeriods = NUM_PERIODS_1;
+
+    for(i = 0; i < numPeriods; i++) //5 x 50us -> 0
+    {
+        transponderIrDMABuffer[dmaBufferOffset] = 50; //IR-Led on
+        dmaBufferOffset++;
+    }
+
+    //TODO: Make delay 20ms + rnd(0,5)ms long!
+    for(i = dmaBufferOffset; i < 400; i++)
+    {
+        transponderIrDMABuffer[dmaBufferOffset] = 0;
+        dmaBufferOffset++;
     }
 }
 
